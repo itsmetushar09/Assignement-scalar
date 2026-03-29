@@ -1,84 +1,162 @@
-import { Card } from "../models/index.js";
+import { supabase } from "../config/supabaseClient.js";
 
-// ✅ Create Card
+// Create Card
 export const createCard = async (req, res) => {
   try {
-    const { title, listId } = req.body;
+    const { title, description, list_id } = req.body;
 
-    if (!title || !listId) {
-      return res.status(400).json({ msg: "Title and listId required" });
-    }
+    // Get next position
+    const { data: existingCards, error: posError } = await supabase
+      .from("cards")
+      .select("position")
+      .eq("list_id", list_id)
+      .order("position", { ascending: false })
+      .limit(1);
 
-    const parsedListId = Number(listId);
+    if (posError) throw posError;
 
-    const count = await Card.count({
-      where: { listId: parsedListId },
-    });
+    const position = existingCards.length > 0
+      ? existingCards[0].position + 1
+      : 1;
 
-    const card = await Card.create({
-      title,
-      listId: parsedListId,
-      position: count,
-    });
+    // Insert card
+    const { data, error } = await supabase
+      .from("cards")
+      .insert([
+        {
+          title,
+          description: description || "",
+          list_id,
+          position,
+        },
+      ])
+      .select();
 
-    res.json(card);
+    if (error) throw error;
+
+    res.json(data[0]);
   } catch (err) {
-    console.error("Create card error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// ✅ Get Cards
-export const getCards = async (req, res) => {
+// Get Cards by List
+export const getCardsByList = async (req, res) => {
   try {
-    const listId = Number(req.params.listId);
+    const { listId } = req.params;
 
-    const cards = await Card.findAll({
-      where: { listId },
-      order: [["position", "ASC"]],
-    });
+    const { data, error } = await supabase
+      .from("cards")
+      .select("*")
+      .eq("list_id", listId)
+      .order("position");
 
-    res.json(cards);
+    if (error) throw error;
+
+    res.json(data);
   } catch (err) {
-    console.error("Get cards error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// ✅ Move Card (FIXED)
+// Update Card
+export const updateCard = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description } = req.body;
+
+    const { data, error } = await supabase
+      .from("cards")
+      .update({ title, description })
+      .eq("id", id)
+      .select();
+
+    if (error) throw error;
+
+    res.json(data[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Delete Card
+export const deleteCard = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from("cards")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+
+    res.json({ message: "Card deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Move Card (between lists)
 export const moveCard = async (req, res) => {
   try {
-    let { cardId, listId } = req.body;
+    const { id } = req.params;
+    const { newListId } = req.body;
 
-    // 🔥 Convert to number (VERY IMPORTANT)
-    cardId = Number(cardId);
-    listId = Number(listId);
+    // Get next position in new list
+    const { data: existingCards, error: posError } = await supabase
+      .from("cards")
+      .select("position")
+      .eq("list_id", newListId)
+      .order("position", { ascending: false })
+      .limit(1);
 
-    if (!cardId || !listId) {
-      return res.status(400).json({ msg: "Invalid cardId or listId" });
-    }
+    if (posError) throw posError;
 
-    // 🔍 Find card
-    const card = await Card.findByPk(cardId);
+    const newPosition = existingCards.length > 0
+      ? existingCards[0].position + 1
+      : 1;
 
-    if (!card) {
-      return res.status(404).json({ msg: "Card not found" });
-    }
+    // Update card
+    const { data, error } = await supabase
+      .from("cards")
+      .update({
+        list_id: newListId,
+        position: newPosition,
+      })
+      .eq("id", id)
+      .select();
 
-    // 📊 Count cards in new list
-    const count = await Card.count({
-      where: { listId },
-    });
+    if (error) throw error;
 
-    // 🔄 Update
-    card.listId = listId;
-    card.position = count;
-
-    await card.save();
-
-    res.json(card);
+    res.json(data[0]);
   } catch (err) {
-    console.error("MOVE ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Reorder Cards
+export const reorderCards = async (req, res) => {
+  try {
+    const { cards } = req.body;
+
+    // Update all cards one by one (Supabase has no BEGIN/COMMIT here)
+    const updates = cards.map((card) =>
+      supabase
+        .from("cards")
+        .update({ position: card.position })
+        .eq("id", card.id)
+    );
+
+    const results = await Promise.all(updates);
+
+    // Check errors
+    for (let r of results) {
+      if (r.error) throw r.error;
+    }
+
+    res.json({ message: "Cards reordered" });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };

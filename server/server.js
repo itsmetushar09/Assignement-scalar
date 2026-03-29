@@ -1,23 +1,37 @@
 import express from "express";
 import cors from "cors";
-
-import { sequelize } from "./models/index.js";
+import dotenv from "dotenv";
 
 import boardRoutes from "./routes/boardRoutes.js";
 import listRoutes from "./routes/listRoutes.js";
 import cardRoutes from "./routes/cardRoutes.js";
+import testRoutes from "./routes/testRoutes.js";
+
+dotenv.config();
 
 const app = express();
 
-app.use(cors());
+// ⚡ Enable CORS for all origins (or restrict to frontend URL)
+app.use(cors({
+  origin: "*", // <-- For testing, allow all. Replace "*" with your frontend URL in production
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
 
-// ✅ Sync MySQL tables
-await sequelize.sync({ alter: true });
-
+// --- Routes ---
+app.use("/api", testRoutes);
 app.use("/api/boards", boardRoutes);
 app.use("/api/lists", listRoutes);
 app.use("/api/cards", cardRoutes);
 
+app.get("/", (req, res) => {
+  res.send("🚀 Supabase API running");
+});
 
-app.listen(5000, () => console.log("Server running 🚀"));
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🔥 Server running on port ${PORT}`);
+});
