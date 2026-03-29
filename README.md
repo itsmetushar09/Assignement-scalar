@@ -21,17 +21,17 @@ The inspiration came from the need for lightweight, visually-driven project mana
 ## 💬 What it does
 Core Features:
 
-- 1. Board Management
+- Board Management
 
 Create boards with a title
 View boards with all lists and cards
 
-- 2. Lists Management
+- Lists Management
 
 Create, edit, and delete lists
 Reorder lists using drag-and-drop
 
-- 3. Cards Management
+- Cards Management
 
 Create, edit, and delete cards
 Move cards between lists using drag-and-drop
@@ -50,7 +50,7 @@ Add labels, due dates, checklists, and assign members
 - Database Relationships: Modeling boards, lists, cards, labels, and members effectively
 - Search & Filter Performance: Filtering large datasets dynamically while maintaining UI responsiveness
 
-✅ How We Built It
+## ✅ How We Built It
 - Frontend: React.js SPA with Tailwind CSS for styling and Lucide-React for icons
 - Backend: Node.js + Express.js with REST APIs for boards, lists, and cards
 - Database: PostgreSQL with relational modeling for boards, lists, cards, labels, members, and checklists
