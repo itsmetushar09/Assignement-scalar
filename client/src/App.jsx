@@ -6,9 +6,12 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0079bf]">
-      {/* Trello Top Navigation Bar */}
-      <nav className="bg-[#005c91] w-full h-12 flex items-center justify-between px-4 shadow-sm shrink-0">
+    // Replaced the blue gradient with a modern Deep Purple/Violet gradient
+    <div className="flex flex-col h-screen w-screen overflow-hidden 
+                    bg-gradient-to-br from-indigo-900 via-purple-800 to-fuchsia-700">
+      
+      {/* Trello Top Navigation Bar - Swapped to a translucent dark indigo */}
+      <nav className="bg-indigo-950/60 w-full h-12 flex items-center justify-between px-4 shadow-sm backdrop-blur-md shrink-0 border-b border-white/10">
         
         {/* Left Side: Logo & Main Nav */}
         <div className="flex items-center gap-4">
@@ -52,8 +55,8 @@ function App() {
             <Info size={20} />
           </button>
           
-          {/* Default User Avatar */}
-          <div className="w-7 h-7 bg-blue-400 rounded-full flex items-center justify-center text-white text-sm font-bold ml-2 cursor-pointer border border-white/20">
+          {/* Default User Avatar - Swapped from blue to fuchsia */}
+          <div className="w-7 h-7 bg-fuchsia-600 rounded-full flex items-center justify-center text-white text-sm font-bold ml-2 cursor-pointer border border-white/20 shadow-sm">
             JS
           </div>
         </div>
